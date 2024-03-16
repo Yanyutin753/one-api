@@ -1,56 +1,48 @@
-name: Publish Docker image (amd64, English)
+name: Upstream Sync
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
 
 on:
-  push:
-    tags:
-      - '*'
+  schedule:
+    - cron: '0 * * * *' # every hour
   workflow_dispatch:
-    inputs:
-      name:
-        description: 'reason'
-        required: false
+
 jobs:
-  push_to_registries:
-    name: Push Docker image to multiple registries
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
+    if: ${{ github.event.repository.fork }}
+
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Check repository URL
-        run: |
-          REPO_URL=$(git config --get remote.origin.url)
-          if [[ $REPO_URL == *"pro" ]]; then
-            exit 1
-          fi      
-
-      - name: Save version info
-        run: |
-          git describe --tags > VERSION 
-
-      - name: Translate
-        run: |
-          python ./i18n/translate.py --repository_path . --json_file_path ./i18n/en.json
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Clean issue notice
+        uses: actions-cool/issues-helper@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          actions: 'close-issues'
+          labels: '🚨 Sync Fail'
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          images: |
-            justsong/one-api-en
+          upstream_sync_repo: songquanpeng/one-api
+          upstream_sync_branch: main
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }} # automatically generated, no need to set
+          test_mode: false
 
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v3
+      - name: Sync check
+        if: failure()
+        uses: actions-cool/issues-helper@v3
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          actions: 'create-issue'
+          title: '🚨 同步失败 | Sync Fail'
+          labels: '🚨 Sync Fail'
+          body: |
+            Due to a change in the workflow file of the songquanpeng/one-api upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork. Please refer to the detailed [Tutorial][tutorial-en-US] for instructions.
+
+            由于 songquanpeng/one-api上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次
