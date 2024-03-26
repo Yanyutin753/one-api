@@ -29,8 +29,8 @@ jobs:
         id: sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          upstream_sync_repo: cxk-521/one-api
-          upstream_sync_branch: customer-function
+          upstream_sync_repo: songquanpeng/one-api
+          upstream_sync_branch: main
           target_sync_branch: gpts
           target_repo_token: ${{ secrets.GITHUB_TOKEN }} # automatically generated, no need to set
           test_mode: false
@@ -43,6 +43,6 @@ jobs:
           title: '🚨 同步失败 | Sync Fail'
           labels: '🚨 Sync Fail'
           body: |
-            Due to a change in the workflow file of the cxk-521/one-api upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork. Please refer to the detailed [Tutorial][tutorial-en-US] for instructions.
+            Due to a change in the workflow file of the songquanpeng/one-api upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork. Please refer to the detailed [Tutorial][tutorial-en-US] for instructions.
 
-            由于 cxk-521/one-api上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次
+            由于 songquanpeng/one-api 上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次
